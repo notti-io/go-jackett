@@ -29,6 +29,28 @@ func main() {
     for _, r := range resp.Results {
         log.Printf("%+v", r)
     }
+
+    // Adding a new indexer
+    err = j.AddIndexer(ctx, "new-indexer")
+    if err != nil {
+        panic(err)
+    }
+
+    // Removing an existing indexer
+    err = j.RemoveIndexer(ctx, "existing-indexer")
+    if err != nil {
+        panic(err)
+    }
+
+    // Updating an existing indexer
+    settings := map[string]interface{}{
+        "setting1": "value1",
+        "setting2": "value2",
+    }
+    err = j.UpdateIndexer(ctx, "existing-indexer", settings)
+    if err != nil {
+        panic(err)
+    }
 }
 ```
 
@@ -39,4 +61,30 @@ In this case just provide empty settings like so:
 
 ```golang
 j := jackett.NewJackett(&jackett.Settings{})
+```
+
+## New Methods
+
+### AddIndexer
+
+Adds a new indexer to the Jackett instance.
+
+```golang
+func (j *Jackett) AddIndexer(ctx context.Context, indexerID string) error
+```
+
+### RemoveIndexer
+
+Removes an existing indexer from the Jackett instance.
+
+```golang
+func (j *Jackett) RemoveIndexer(ctx context.Context, indexerID string) error
+```
+
+### UpdateIndexer
+
+Updates the settings of an existing indexer in the Jackett instance.
+
+```golang
+func (j *Jackett) UpdateIndexer(ctx context.Context, indexerID string, settings map[string]interface{}) error
 ```

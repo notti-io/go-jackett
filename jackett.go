@@ -156,6 +156,87 @@ func (j *Jackett) Fetch(ctx context.Context, fr *FetchRequest) (*FetchResponse, 
 	return &fres, nil
 }
 
+func (j *Jackett) AddIndexer(ctx context.Context, indexerID string) error {
+	u, err := url.Parse(j.settings.ApiURL)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse apiURL %q", j.settings.ApiURL)
+	}
+	u.Path = fmt.Sprintf("/api/v2.0/indexers/%s", indexerID)
+	q := u.Query()
+	q.Set("apikey", j.settings.ApiKey)
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, "POST", u.String(), nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to make add indexer request")
+	}
+	res, err := j.settings.Client.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "failed to invoke add indexer request")
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to add indexer, status code: %d", res.StatusCode)
+	}
+	return nil
+}
+
+func (j *Jackett) RemoveIndexer(ctx context.Context, indexerID string) error {
+	u, err := url.Parse(j.settings.ApiURL)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse apiURL %q", j.settings.ApiURL)
+	}
+	u.Path = fmt.Sprintf("/api/v2.0/indexers/%s", indexerID)
+	q := u.Query()
+	q.Set("apikey", j.settings.ApiKey)
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, "DELETE", u.String(), nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to make remove indexer request")
+	}
+	res, err := j.settings.Client.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "failed to invoke remove indexer request")
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to remove indexer, status code: %d", res.StatusCode)
+	}
+	return nil
+}
+
+func (j *Jackett) UpdateIndexer(ctx context.Context, indexerID string, settings map[string]interface{}) error {
+	u, err := url.Parse(j.settings.ApiURL)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse apiURL %q", j.settings.ApiURL)
+	}
+	u.Path = fmt.Sprintf("/api/v2.0/indexers/%s", indexerID)
+	q := u.Query()
+	q.Set("apikey", j.settings.ApiKey)
+	u.RawQuery = q.Encode()
+
+	body, err := json.Marshal(settings)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal indexer settings")
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "PUT", u.String(), strings.NewReader(string(body)))
+	if err != nil {
+		return errors.Wrap(err, "failed to make update indexer request")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	res, err := j.settings.Client.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "failed to invoke update indexer request")
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to update indexer, status code: %d", res.StatusCode)
+	}
+	return nil
+}
+
 func init() {
 	if v, ok := os.LookupEnv("JACKETT_API_URL"); ok {
 		apiURL = v
