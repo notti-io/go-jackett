@@ -55,8 +55,48 @@ func TestFetch(t *testing.T) {
 	}
 }
 
+func TestAddIndexer(t *testing.T) {
+	ctx := context.Background()
+	err := testJackett.AddIndexer(ctx, "new-indexer")
+	if err != nil {
+		t.Errorf("AddIndexer() error = %v, wantErr %v", err, nil)
+	}
+}
+
+func TestRemoveIndexer(t *testing.T) {
+	ctx := context.Background()
+	err := testJackett.RemoveIndexer(ctx, "existing-indexer")
+	if err != nil {
+		t.Errorf("RemoveIndexer() error = %v, wantErr %v", err, nil)
+	}
+}
+
+func TestUpdateIndexer(t *testing.T) {
+	ctx := context.Background()
+	settings := map[string]interface{}{
+		"setting1": "value1",
+		"setting2": "value2",
+	}
+	err := testJackett.UpdateIndexer(ctx, "existing-indexer", settings)
+	if err != nil {
+		t.Errorf("UpdateIndexer() error = %v, wantErr %v", err, nil)
+	}
+}
+
 func init() {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && strings.Contains(r.URL.Path, "new-indexer") {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if r.Method == http.MethodDelete && strings.Contains(r.URL.Path, "existing-indexer") {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if r.Method == http.MethodPut && strings.Contains(r.URL.Path, "existing-indexer") {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		w.Write([]byte(`{"Results":[`))
 		w.Write([]byte(`{"FirstSeen":"0001-01-01T00:00:00","Tracker":"1337x","TrackerId":"1337x","CategoryDesc":"Audio","BlackholeLink":null,"Title":"RUSH Oakland Coliseum Oakland CA 1992 01 30 Speed Corrected ASM vers of Mirrors","Guid":"https://1337x.to/torrent/4524786/RUSH-Oakland-Coliseum-Oakland-CA-1992-01-30-Speed-Corrected-ASM-vers-of-Mirrors/","Link":"https://jackett.example.xyz:443/dl/1337x/?jackett_apikey=***&path=Q2ZESjhGLWF3Y2pLMDlsQ3JJZnhWM1dUUUw3akZrUHdVTlhUVTc5eHQ4VFd2NVJud2lBcDR4TllKb0pYV3ZzdFNaRHR1OFFVazl2ME9tX2c5eHVMTTJLQ0hVeVRoY3JXNEJwazNFdnhkSzZwX0oyUkpSLUlzZmltX1RtOWNsY0Z4eFNPaVhZbmp2d3U5emVfVWFXZDhlaUNoaHFpb2RTYUhzOUFjTG05enJnR1BIaXQ5c2Z2MU8zR2k3MDNhMG8wckFOUE83RG5TTHVkQVVibjA5MHRReWU2dWtsNGxTVkNFYVZoU1dIWG9JcURUNVU0T0xTMDlZZk5sZ0xrWGkwV1FOem5WMjBfZmdMTktNbWYwbHNrTFliRl9pcw&file=RUSH+Oakland+Coliseum+Oakland+CA+1992+01+30+Speed+Corrected+ASM+vers+of+Mirrors","Comments":"https://1337x.to/torrent/4524786/RUSH-Oakland-Coliseum-Oakland-CA-1992-01-30-Speed-Corrected-ASM-vers-of-Mirrors/","PublishDate":"2020-07-01T12:39:19.3915488+01:00","Category":[3000,100068],"Size":883635008,"Files":91,"Grabs":null,"Description":null,"RageID":null,"TVDBId":null,"Imdb":null,"TMDb":null,"Seeders":0,"Peers":0,"BannerUrl":null,"InfoHash":null,"MagnetUri":null,"MinimumRatio":1.0,"MinimumSeedTime":172800,"DownloadVolumeFactor":0.0,"UploadVolumeFactor":1.0,"Gain":0.0},`))
 		w.Write([]byte(`{"FirstSeen":"0001-01-01T00:00:00","Tracker":"MyCornClub","TrackerId":"mycornclub","CategoryDesc":"XXX","BlackholeLink":null,"Title":"Grandpa With Son Baking Aunt And Sons Girlfriend","Guid":"https://mycorn.club/torrent/e68TkEko","Link":"https://jackett.example.xyz:443/dl/mycornclub/?jackett_apikey=***&path=Q2ZESjhGLWF3Y2pLMDlsQ3JJZnhWM1dUUUw3YU1TRER6MlZmdzBBSm0wRlVUbFdNeUxuMXNqTm1wWlJXWTlhcnJmV1BxQlF3eFJDTGlBeEdaZU9hQmFUYzBtV2ZINmlCUm9WY3BDdHV1djVSTmZlbEtoU3AwdDhLMGpzWnZxVHcweEhKTml6ek94bjRtdGJWQ3RhSmdpbVpKNktxcXBZZ1JQRWpXNzV5VTllYm9sQzI&file=Grandpa+With+Son+Baking+Aunt+And+Sons+Girlfriend","Comments":"https://mycorn.club/torrent/e68TkEko","PublishDate":"2020-07-01T12:30:14.9551777+01:00","Category":[6000],"Size":537741248,"Files":null,"Grabs":2,"Description":null,"RageID":null,"TVDBId":null,"Imdb":null,"TMDb":null,"Seeders":0,"Peers":0,"BannerUrl":null,"InfoHash":null,"MagnetUri":null,"MinimumRatio":1.0,"MinimumSeedTime":172800,"DownloadVolumeFactor":0.0,"UploadVolumeFactor":1.0,"Gain":0.0},`))
